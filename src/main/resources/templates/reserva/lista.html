@@ -68,6 +68,9 @@
                         <td th:text="${#numbers.formatDecimal(r.valorTotal, 0, 'COMMA', 2, 'POINT')}">-</td>
                         <td class="text-end">
                             <a th:href="@{/reservas/{id}(id=${r.id})}" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
+                            <form th:if="${r.estado} == 'CONFIRMADA'" th:action="@{/reservas/editar/{id}(id=${r.id})}" method="get" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></button>
+                            </form>
                             <form th:if="${r.estado} == 'CONFIRMADA'" th:action="@{/reservas/checkin/{id}(id=${r.id})}" method="post" style="display:inline;" onsubmit="return confirm('¿Realizar check-in?');">
                                 <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-box-arrow-in-right"></i></button>
                             </form>

@@ -37,6 +37,30 @@ public interface ReservaDao extends JpaRepository<Reserva, Long> {
                           @Param("checkOut") LocalDate checkOut);
 
     /**
+     * Indica si existe una reserva confirmada (no cancelada ni finalizada) que se cruce en fechas
+     * con el rango dado para la misma habitacion, excluyendo una reserva especifica.
+     * El rango es [checkIn, checkOut): la salida de una puede ser la entrada de otra.
+     *
+     * @param roomId identificador de la habitacion
+     * @param excludeId identificador de la reserva a excluir (la misma reserva que se edita)
+     * @param checkIn fecha de entrada
+     * @param checkOut fecha de salida
+     * @return true si hay cruce de reservas
+     */
+    @Query("""
+        SELECT case when count(r) > 0 then true else false end FROM Reserva r
+        WHERE r.habitacion.id = :roomId
+          AND r.id <> :excludeId
+          AND r.estado = 'CONFIRMADA'
+          AND r.fechaEntrada < :checkOut
+          AND r.fechaSalida > :checkIn
+        """)
+    boolean existsOverlapExcluding(@Param("roomId") Long roomId,
+                                   @Param("excludeId") Long excludeId,
+                                   @Param("checkIn") LocalDate checkIn,
+                                   @Param("checkOut") LocalDate checkOut);
+
+    /**
      * Lista las reservas confirmadas vigentes o futuras de una habitacion.
      * Se usa para recalcular el estado de la habitacion al cancelar.
      *

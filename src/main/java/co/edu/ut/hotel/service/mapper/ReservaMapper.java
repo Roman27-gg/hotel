@@ -61,6 +61,8 @@ public class ReservaMapper {
         }
         return new ReservaResponse(
                 entidad.getId(),
+                entidad.getHabitacion().getId(),
+                entidad.getHuesped().getId(),
                 habitacion.getNumero(),
                 entidad.getHuesped().getNombreCompleto(),
                 entidad.getHuesped().getDocumento(),

@@ -9,13 +9,17 @@ import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -25,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Tests de vista para HuespedControllerWeb.
  */
 @WebMvcTest(HuespedControllerWeb.class)
+@Import(ThymeleafAutoConfiguration.class)
 class HuespedControllerWebViewTest {
 
     @Autowired
@@ -107,5 +112,57 @@ class HuespedControllerWebViewTest {
                 .andReturn();
 
         PaginaAsserts.limpia(result.getResponse().getContentAsString(), "GET /huespedes con búsqueda");
+    }
+
+    @Test
+    void editarForm_cargaDatosExistentes() throws Exception {
+        HuespedResponse existente = new HuespedResponse(
+                1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com"
+        );
+        when(huespedService.findById(1L)).thenReturn(existente);
+
+        MvcResult result = mockMvc.perform(get("/huespedes/editar/1"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("huesped/form"))
+                .andExpect(model().attributeExists("huesped", "id"))
+                .andReturn();
+
+        Document doc = PaginaAsserts.limpia(result.getResponse().getContentAsString(), "GET /huespedes/editar/1");
+        var inputDocumento = doc.select("input[name=documento]").first();
+        if (inputDocumento == null || !"12345678".equals(inputDocumento.attr("value"))) {
+            throw new AssertionError("Editar: documento no se conserva");
+        }
+    }
+
+    @Test
+    void actualizar_exito_redirigeConFlash() throws Exception {
+        when(huespedService.update(anyLong(), any())).thenReturn(
+                new HuespedResponse(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com")
+        );
+
+        MvcResult result = mockMvc.perform(post("/huespedes/actualizar/1")
+                        .param("documento", "12345678")
+                        .param("nombre", "Juan")
+                        .param("apellido", "Perez")
+                        .param("telefono", "3001112233")
+                        .param("email", "juan@email.com"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/huespedes"))
+                .andExpect(flash().attributeExists("mensaje"))
+                .andReturn();
+    }
+
+    @Test
+    void eliminar_exito_redirigeConFlash() throws Exception {
+        when(huespedService.findById(1L)).thenReturn(
+                new HuespedResponse(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com")
+        );
+        doNothing().when(huespedService).delete(anyLong());
+
+        MvcResult result = mockMvc.perform(post("/huespedes/eliminar/1"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/huespedes"))
+                .andExpect(flash().attributeExists("mensaje"))
+                .andReturn();
     }
 }

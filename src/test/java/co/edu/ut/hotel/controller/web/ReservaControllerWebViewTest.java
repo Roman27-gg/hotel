@@ -17,7 +17,9 @@ import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -37,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Valida validaciones por campo, mensajes visibles, valores conservados, selects recargados.
  */
 @WebMvcTest(ReservaControllerWeb.class)
+@Import(ThymeleafAutoConfiguration.class)
 class ReservaControllerWebViewTest {
 
     @Autowired
@@ -161,7 +164,7 @@ class ReservaControllerWebViewTest {
     @Test
     void guardar_exito_redirigeConFlash() throws Exception {
         when(reservaService.create(any())).thenReturn(
-                new ReservaResponse(1L, "101", "Juan Perez", "12345678", LocalDate.now(), LocalDate.now().plusDays(3), 3, 2, EstadoReserva.CONFIRMADA, BigDecimal.valueOf(240000), BigDecimal.ZERO, java.util.Map.of())
+                new ReservaResponse(1L, 1L, 1L, "101", "Juan Perez", "12345678", LocalDate.now(), LocalDate.now().plusDays(3), 3, 2, EstadoReserva.CONFIRMADA, BigDecimal.valueOf(240000), BigDecimal.ZERO, java.util.Map.of())
         );
 
         MvcResult result = mockMvc.perform(post("/reservas/guardar")

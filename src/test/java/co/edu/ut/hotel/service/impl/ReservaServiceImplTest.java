@@ -79,7 +79,7 @@ class ReservaServiceImplTest {
 
         Reserva entity = new Reserva();
         Reserva saved = new Reserva(1L, h, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
-        ReservaResponse resp = new ReservaResponse(1L, "101", "Juan Perez", "12345678", LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 3, 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, java.util.Map.of());
+        ReservaResponse resp = new ReservaResponse(1L, 1L, 1L, "101", "Juan Perez", "12345678", LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 3, 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, java.util.Map.of());
 
         when(clock.instant()).thenReturn(Instant.now());
         when(clock.getZone()).thenReturn(ZoneId.systemDefault());
@@ -166,7 +166,7 @@ class ReservaServiceImplTest {
         Habitacion h = new HabitacionSencilla(1L, "101", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
         Reserva r = new Reserva(1L, h, new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null), LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
         when(reservaDao.findById(1L)).thenReturn(Optional.of(r));
-        when(reservaMapper.toResponse(r)).thenReturn(new ReservaResponse(1L, "101", "Juan Perez", "12345678", LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 3, 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, java.util.Map.of()));
+        when(reservaMapper.toResponse(r)).thenReturn(new ReservaResponse(1L, 1L, 1L, "101", "Juan Perez", "12345678", LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 3, 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, java.util.Map.of()));
 
         ReservaResponse result = reservaService.findById(1L);
 

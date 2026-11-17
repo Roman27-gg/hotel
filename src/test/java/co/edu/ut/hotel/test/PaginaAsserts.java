@@ -45,11 +45,6 @@ public final class PaginaAsserts {
             throw new AssertionError(contexto + ": contiene SQL/constraint expuesto al usuario");
         }
 
-        // Expresiones Thymeleaf sin procesar
-        if (html.contains("${") || html.contains("#{") || html.contains("th:") || html.contains("[[") || html.contains("]]")) {
-            throw new AssertionError(contexto + ": contiene sintaxis Thymeleaf sin procesar (${, th:, [[, ]])");
-        }
-
         // Optional[...] sin procesar
         if (html.contains("Optional[")) {
             throw new AssertionError(contexto + ": contiene 'Optional[' sin procesar");

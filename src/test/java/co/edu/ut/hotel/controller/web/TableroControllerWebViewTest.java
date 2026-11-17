@@ -13,6 +13,7 @@ import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Tests de vista para TableroControllerWeb.
  */
 @WebMvcTest(TableroControllerWeb.class)
-@Import(TableroTestConfig.class)
+@Import({TableroTestConfig.class, ThymeleafAutoConfiguration.class})
 class TableroControllerWebViewTest {
 
     @Autowired
@@ -51,8 +52,8 @@ class TableroControllerWebViewTest {
         HabitacionResponse h3 = new HabitacionResponse(3L, "201", TipoHabitacion.SUITE, 4, BigDecimal.valueOf(200000), EstadoHabitacion.OCUPADA);
         HabitacionResponse h4 = new HabitacionResponse(4L, "202", TipoHabitacion.SUITE, 4, BigDecimal.valueOf(200000), EstadoHabitacion.MANTENIMIENTO);
 
-        ReservaResponse r1 = new ReservaResponse(1L, "101", "Juan Perez", "12345678", hoy, hoy.plusDays(3), 3, 2, EstadoReserva.CONFIRMADA, BigDecimal.valueOf(240000), BigDecimal.ZERO, java.util.Map.of());
-        ReservaResponse r2 = new ReservaResponse(2L, "102", "Maria Gomez", "87654321", hoy, hoy.plusDays(2), 2, 1, EstadoReserva.CONFIRMADA, BigDecimal.valueOf(160000), BigDecimal.ZERO, java.util.Map.of());
+        ReservaResponse r1 = new ReservaResponse(1L, 1L, 1L, "101", "Juan Perez", "12345678", hoy, hoy.plusDays(3), 3, 2, EstadoReserva.CONFIRMADA, BigDecimal.valueOf(240000), BigDecimal.ZERO, java.util.Map.of());
+        ReservaResponse r2 = new ReservaResponse(2L, 2L, 2L, "102", "Maria Gomez", "87654321", hoy, hoy.plusDays(2), 2, 1, EstadoReserva.CONFIRMADA, BigDecimal.valueOf(160000), BigDecimal.ZERO, java.util.Map.of());
 
         when(habitacionService.findAll()).thenReturn(List.of(h1, h2, h3, h4));
         when(reservaService.findAll()).thenReturn(List.of(r1, r2));

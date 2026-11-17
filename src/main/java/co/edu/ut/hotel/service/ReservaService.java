@@ -24,6 +24,17 @@ public interface ReservaService {
     ReservaResponse create(ReservaRequest request);
 
     /**
+     * Actualiza una reserva existente permitiendo cambiar fechaEntrada, fechaSalida y numHuespedes.
+     * Verifica que las nuevas fechas no crucen con otra reserva confirmada de la misma habitación.
+     * No permite cambiar la fecha de entrada a una fecha pasada.
+     *
+     * @param id      identificador de la reserva
+     * @param request datos actualizados de la reserva
+     * @return respuesta de la reserva actualizada
+     */
+    ReservaResponse update(Long id, ReservaRequest request);
+
+    /**
      * Lista todas las reservas.
      *
      * @return lista de respuestas de reserva

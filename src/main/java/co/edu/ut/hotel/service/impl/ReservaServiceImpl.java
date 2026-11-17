@@ -157,9 +157,74 @@ public class ReservaServiceImpl implements ReservaService {
     }
 
     @Override
+    @Transactional
+    public ReservaResponse update(Long id, ReservaRequest request) {
+        Reserva reserva = reservaDao.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Reserva no encontrada con id " + id));
+
+        if (reserva.getEstado() != EstadoReserva.CONFIRMADA) {
+            throw new IllegalArgumentException("Solo se puede editar una reserva CONFIRMADA");
+        }
+
+        // Obtener la habitación actual y la nueva (si cambió)
+        Habitacion habitacionActual = reserva.getHabitacion();
+        Habitacion habitacionNueva = habitacionDao.findById(request.getHabitacionId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Habitacion no encontrada con id " + request.getHabitacionId()));
+
+        if (HabitacionUtil.estaEnMantenimiento(habitacionNueva.getEstado())) {
+            throw new HabitacionNoDisponibleException("La habitacion " + habitacionNueva.getNumero() + " esta en mantenimiento y no se puede reservar");
+        }
+
+        Huesped huesped = huespedDao.findById(request.getHuespedId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Huesped no encontrado con id " + request.getHuespedId()));
+
+        LocalDate hoy = LocalDate.now(clock);
+        if (request.getFechaEntrada().isBefore(hoy)) {
+            throw new IllegalArgumentException("La fecha de entrada no puede ser anterior a hoy (" + hoy + ")");
+        }
+        ReservaUtil.validarFechas(request.getFechaEntrada(), request.getFechaSalida());
+        ReservaUtil.validarCapacidad(request.getNumHuespedes(), habitacionNueva.getCapacidad());
+
+        // Verificar cruce de fechas (excluyendo la reserva actual)
+        if (reservaDao.existsOverlapExcluding(habitacionNueva.getId(), id, request.getFechaEntrada(), request.getFechaSalida())) {
+            throw new ReservaCruzadaException(
+                    "La habitacion " + habitacionNueva.getNumero() + " ya tiene una reserva confirmada en esas fechas");
+        }
+
+        // Calcular nuevo valor total con polimorfismo
+        int noches = HabitacionUtil.calcularNoches(request.getFechaEntrada(), request.getFechaSalida());
+        BigDecimal valorTotal = cotizacionService.calculate(habitacionNueva.getId(), noches).total();
+
+        // Actualizar campos
+        reserva.setHabitacion(habitacionNueva);
+        reserva.setHuesped(huesped);
+        reserva.setFechaEntrada(request.getFechaEntrada());
+        reserva.setFechaSalida(request.getFechaSalida());
+        reserva.setNumHuespedes(request.getNumHuespedes());
+        reserva.setValorTotal(valorTotal);
+
+        Reserva saved = reservaDao.save(reserva);
+
+        // Recalcular estado de ambas habitaciones (la original y la nueva si son diferentes)
+        recalcularEstadoHabitacion(habitacionActual.getId());
+        if (!habitacionActual.getId().equals(habitacionNueva.getId())) {
+            recalcularEstadoHabitacion(habitacionNueva.getId());
+        }
+
+        log.info("Reserva actualizada: id={} habitacion={} valorTotal={}", saved.getId(), habitacionNueva.getNumero(), valorTotal);
+        return reservaMapper.toResponse(saved);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<ReservaResponse> findByStateAndDateRange(String state, LocalDate from, LocalDate to) {
-        return reservaMapper.toResponseList(reservaDao.findAll());
+        var reservas = reservaDao.findAll();
+        return reservas.stream()
+                .filter(r -> state == null || state.isEmpty() || r.getEstado().name().equals(state))
+                .filter(r -> from == null || !r.getFechaEntrada().isBefore(from))
+                .filter(r -> to == null || !r.getFechaSalida().isAfter(to))
+                .map(reservaMapper::toResponse)
+                .toList();
     }
 
     /**

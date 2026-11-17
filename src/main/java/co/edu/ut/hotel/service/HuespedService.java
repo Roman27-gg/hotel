@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * Contrato del servicio de huespedes.
- * Expone operaciones de agregado y consulta; la edicion es opcional en el alcance minimo.
+ * Expone operaciones CRUD completas.
  */
 public interface HuespedService {
 
@@ -33,6 +33,22 @@ public interface HuespedService {
      * @return respuesta del huesped creado
      */
     HuespedResponse create(HuespedRequest request);
+
+    /**
+     * Actualiza un huesped existente.
+     *
+     * @param id      identificador del huesped
+     * @param request datos actualizados del huesped
+     * @return respuesta del huesped actualizado
+     */
+    HuespedResponse update(Long id, HuespedRequest request);
+
+    /**
+     * Elimina un huesped por su identificador.
+     *
+     * @param id identificador del huesped
+     */
+    void delete(Long id);
 
     /**
      * Busca un huesped por su numero de documento.

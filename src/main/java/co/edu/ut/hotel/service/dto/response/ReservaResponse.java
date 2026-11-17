@@ -12,6 +12,8 @@ import java.util.Map;
  */
 public record ReservaResponse(
         Long id,
+        Long habitacionId,
+        Long huespedId,
         String habitacionNumero,
         String huespedNombreCompleto,
         String huespedDocumento,

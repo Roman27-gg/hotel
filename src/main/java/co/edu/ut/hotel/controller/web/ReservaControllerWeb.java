@@ -8,6 +8,8 @@ import co.edu.ut.hotel.service.dto.request.ReservaRequest;
 import co.edu.ut.hotel.service.dto.response.HabitacionDisponibleResponse;
 import co.edu.ut.hotel.service.dto.response.HuespedResponse;
 import co.edu.ut.hotel.service.dto.response.ReservaResponse;
+import co.edu.ut.hotel.service.enums.EstadoHabitacion;
+import co.edu.ut.hotel.service.enums.EstadoReserva;
 import co.edu.ut.hotel.service.exception.HotelException;
 import co.edu.ut.hotel.service.exception.RecursoNoEncontradoException;
 import co.edu.ut.hotel.service.exception.ReservaCruzadaException;
@@ -145,6 +147,98 @@ public class ReservaControllerWeb {
         } catch (Exception ex) {
             redirect.addFlashAttribute("error", "No se pudo cargar el detalle de la reserva");
             return "redirect:/reservas";
+        }
+    }
+
+    @GetMapping("/editar/{id}")
+    public String editarForm(@PathVariable Long id, Model model, RedirectAttributes redirect) {
+        try {
+            ReservaResponse existente = servicio.findById(id);
+            if (existente.estado() != EstadoReserva.CONFIRMADA) {
+                redirect.addFlashAttribute("error", "Solo se puede editar una reserva CONFIRMADA");
+                return "redirect:/reservas";
+            }
+            ReservaRequest req = new ReservaRequest();
+            req.setHabitacionId(existente.habitacionId());
+            req.setHuespedId(existente.huespedId());
+            req.setFechaEntrada(existente.fechaEntrada());
+            req.setFechaSalida(existente.fechaSalida());
+            req.setNumHuespedes(existente.numHuespedes());
+            model.addAttribute("reserva", req);
+            model.addAttribute("id", id);
+            model.addAttribute("habitaciones", disponibilidadService.findAllReservables());
+            model.addAttribute("huespedes", huespedService.findAll());
+            return "reserva/form";
+        } catch (RecursoNoEncontradoException ex) {
+            redirect.addFlashAttribute("error", "La reserva no existe");
+            return "redirect:/reservas";
+        } catch (Exception ex) {
+            redirect.addFlashAttribute("error", "No se pudo cargar la reserva");
+            return "redirect:/reservas";
+        }
+    }
+
+    @PostMapping("/actualizar/{id}")
+    public String actualizar(@PathVariable Long id,
+                             @Valid @ModelAttribute("reserva") ReservaRequest request,
+                             BindingResult errores, Model model, RedirectAttributes redirect) {
+        if (errores.hasErrors()) {
+            model.addAttribute("id", id);
+            model.addAttribute("habitaciones", disponibilidadService.findAllReservables());
+            model.addAttribute("huespedes", huespedService.findAll());
+            return "reserva/form";
+        }
+        try {
+            servicio.update(id, request);
+            redirect.addFlashAttribute("mensaje", "Reserva actualizada correctamente");
+            return "redirect:/reservas";
+        } catch (RecursoNoEncontradoException ex) {
+            errores.reject("habitacionId", ex.getMessage());
+            model.addAttribute("errorGlobal", ex.getMessage());
+            model.addAttribute("id", id);
+            model.addAttribute("habitaciones", disponibilidadService.findAllReservables());
+            model.addAttribute("huespedes", huespedService.findAll());
+            return "reserva/form";
+        } catch (ReservaCruzadaException ex) {
+            errores.reject("fechaEntrada", ex.getMessage());
+            model.addAttribute("errorGlobal", ex.getMessage());
+            model.addAttribute("id", id);
+            model.addAttribute("habitaciones", disponibilidadService.findAllReservables());
+            model.addAttribute("huespedes", huespedService.findAll());
+            return "reserva/form";
+        } catch (HotelException ex) {
+            errores.reject("global", ex.getMessage());
+            model.addAttribute("errorGlobal", ex.getMessage());
+            model.addAttribute("id", id);
+            model.addAttribute("habitaciones", disponibilidadService.findAllReservables());
+            model.addAttribute("huespedes", huespedService.findAll());
+            return "reserva/form";
+        } catch (DataIntegrityViolationException ex) {
+            if (ex.getMessage() != null && ex.getMessage().contains("ex_reserva_sin_cruce")) {
+                errores.reject("fechaEntrada", "La habitación ya tiene una reserva confirmada en esas fechas");
+                model.addAttribute("errorGlobal", "La habitación ya tiene una reserva confirmada en esas fechas");
+            } else {
+                errores.reject("global", "No se pudo completar la operación con la base de datos. Intente de nuevo.");
+                model.addAttribute("errorGlobal", "No se pudo completar la operación con la base de datos. Intente de nuevo.");
+            }
+            model.addAttribute("id", id);
+            model.addAttribute("habitaciones", disponibilidadService.findAllReservables());
+            model.addAttribute("huespedes", huespedService.findAll());
+            return "reserva/form";
+        } catch (IllegalArgumentException ex) {
+            errores.reject("global", ex.getMessage());
+            model.addAttribute("errorGlobal", ex.getMessage());
+            model.addAttribute("id", id);
+            model.addAttribute("habitaciones", disponibilidadService.findAllReservables());
+            model.addAttribute("huespedes", huespedService.findAll());
+            return "reserva/form";
+        } catch (Exception ex) {
+            errores.reject("global", "Ocurrió un error inesperado. Intente de nuevo.");
+            model.addAttribute("errorGlobal", "Ocurrió un error inesperado. Intente de nuevo.");
+            model.addAttribute("id", id);
+            model.addAttribute("habitaciones", disponibilidadService.findAllReservables());
+            model.addAttribute("huespedes", huespedService.findAll());
+            return "reserva/form";
         }
     }
 
