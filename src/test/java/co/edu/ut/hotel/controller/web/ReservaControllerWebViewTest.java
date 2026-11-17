@@ -193,4 +193,116 @@ class ReservaControllerWebViewTest {
 
         PaginaAsserts.limpia(result.getResponse().getContentAsString(), "GET /reservas con filtros");
     }
+
+    @Test
+    void editarForm_cargaReservaConfirmada() throws Exception {
+        ReservaResponse r = new ReservaResponse(1L, 1L, 1L, "101", "Juan Perez", "12345678",
+                LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 3, 2, EstadoReserva.CONFIRMADA,
+                BigDecimal.valueOf(240000), BigDecimal.ZERO, java.util.Map.of());
+        when(reservaService.findById(1L)).thenReturn(r);
+        when(disponibilidadService.findAllReservables()).thenReturn(List.of());
+        when(huespedService.findAll()).thenReturn(List.of());
+
+        MvcResult result = mockMvc.perform(get("/reservas/editar/1"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("reserva/form"))
+                .andExpect(model().attributeExists("reserva", "id", "habitaciones", "huespedes"))
+                .andReturn();
+
+        Document doc = PaginaAsserts.limpia(result.getResponse().getContentAsString(), "GET /reservas/editar/1");
+        // Verificar que se cargan los valores existentes
+        var inputFechaEntrada = doc.select("input[name=fechaEntrada]").first();
+        if (inputFechaEntrada == null || !"2026-11-20".equals(inputFechaEntrada.attr("value"))) {
+            throw new AssertionError("Editar: fechaEntrada no se conserva");
+        }
+        var inputFechaSalida = doc.select("input[name=fechaSalida]").first();
+        if (inputFechaSalida == null || !"2026-11-23".equals(inputFechaSalida.attr("value"))) {
+            throw new AssertionError("Editar: fechaSalida no se conserva");
+        }
+    }
+
+    @Test
+    void editarForm_reservaNoEsConfirmada_redirige() throws Exception {
+        ReservaResponse r = new ReservaResponse(1L, 1L, 1L, "101", "Juan Perez", "12345678",
+                LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 3, 2, EstadoReserva.CANCELADA,
+                BigDecimal.valueOf(240000), BigDecimal.ZERO, java.util.Map.of());
+        when(reservaService.findById(1L)).thenReturn(r);
+
+        MvcResult result = mockMvc.perform(get("/reservas/editar/1"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/reservas"))
+                .andExpect(flash().attributeExists("error"))
+                .andReturn();
+    }
+
+    @Test
+    void actualizar_exito_redirigeConFlash() throws Exception {
+        ReservaResponse r = new ReservaResponse(1L, 1L, 1L, "101", "Juan Perez", "12345678",
+                LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 3, 2, EstadoReserva.CONFIRMADA,
+                BigDecimal.valueOf(240000), BigDecimal.ZERO, java.util.Map.of());
+        when(reservaService.findById(1L)).thenReturn(r);
+        when(reservaService.update(anyLong(), any())).thenReturn(r);
+        when(disponibilidadService.findAllReservables()).thenReturn(List.of());
+        when(huespedService.findAll()).thenReturn(List.of());
+
+        MvcResult result = mockMvc.perform(post("/reservas/actualizar/1")
+                        .param("habitacionId", "1")
+                        .param("huespedId", "1")
+                        .param("fechaEntrada", "2026-12-20")
+                        .param("fechaSalida", "2026-12-25")
+                        .param("numHuespedes", "2"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/reservas"))
+                .andExpect(flash().attributeExists("mensaje"))
+                .andReturn();
+    }
+
+    @Test
+    void actualizar_salidaAntesDeEntrada_muestraErrorGlobal() throws Exception {
+        ReservaResponse r = new ReservaResponse(1L, 1L, 1L, "101", "Juan Perez", "12345678",
+                LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 3, 2, EstadoReserva.CONFIRMADA,
+                BigDecimal.valueOf(240000), BigDecimal.ZERO, java.util.Map.of());
+        when(reservaService.findById(1L)).thenReturn(r);
+        when(disponibilidadService.findAllReservables()).thenReturn(List.of());
+        when(huespedService.findAll()).thenReturn(List.of());
+
+        MvcResult result = mockMvc.perform(post("/reservas/actualizar/1")
+                        .param("habitacionId", "1")
+                        .param("huespedId", "1")
+                        .param("fechaEntrada", "2026-12-25")
+                        .param("fechaSalida", "2026-12-20")
+                        .param("numHuespedes", "2"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("reserva/form"))
+                .andReturn();
+
+        Document doc = PaginaAsserts.limpia(result.getResponse().getContentAsString(), "POST /reservas/actualizar salida < entrada");
+        PaginaAsserts.errorGlobalVisible(doc, "debe mostrar error global @AssertTrue");
+    }
+
+    @Test
+    void actualizar_cruceFechas_muestraErrorAmigable() throws Exception {
+        ReservaResponse r = new ReservaResponse(1L, 1L, 1L, "101", "Juan Perez", "12345678",
+                LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 3, 2, EstadoReserva.CONFIRMADA,
+                BigDecimal.valueOf(240000), BigDecimal.ZERO, java.util.Map.of());
+        when(reservaService.findById(1L)).thenReturn(r);
+        when(reservaService.update(anyLong(), any())).thenThrow(
+                new co.edu.ut.hotel.service.exception.ReservaCruzadaException("La habitación ya tiene una reserva confirmada en esas fechas")
+        );
+        when(disponibilidadService.findAllReservables()).thenReturn(List.of());
+        when(huespedService.findAll()).thenReturn(List.of());
+
+        MvcResult result = mockMvc.perform(post("/reservas/actualizar/1")
+                        .param("habitacionId", "1")
+                        .param("huespedId", "1")
+                        .param("fechaEntrada", "2026-12-20")
+                        .param("fechaSalida", "2026-12-25")
+                        .param("numHuespedes", "2"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("reserva/form"))
+                .andReturn();
+
+        Document doc = PaginaAsserts.limpia(result.getResponse().getContentAsString(), "POST /reservas/actualizar cruce fechas");
+        PaginaAsserts.errorGlobalVisible(doc, "debe mostrar error amigable de cruce");
+    }
 }

@@ -186,6 +186,7 @@ public class ReservaControllerWeb {
                              BindingResult errores, Model model, RedirectAttributes redirect) {
         if (errores.hasErrors()) {
             model.addAttribute("id", id);
+            model.addAttribute("errorGlobal", "Corrija los errores en el formulario");
             model.addAttribute("habitaciones", disponibilidadService.findAllReservables());
             model.addAttribute("huespedes", huespedService.findAll());
             return "reserva/form";

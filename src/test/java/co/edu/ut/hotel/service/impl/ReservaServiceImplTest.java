@@ -229,4 +229,289 @@ class ReservaServiceImplTest {
         assertEquals(EstadoReserva.FINALIZADA, r.getEstado());
         assertEquals(EstadoHabitacion.DISPONIBLE, h.getEstado());
     }
+
+    @Test
+    void updateExitoso_cambioNumeroHuespedes() {
+        Habitacion h = new HabitacionSencilla(1L, "101", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
+        Huesped hu = new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null);
+        Reserva reservaExistente = new Reserva(1L, h, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+
+        ReservaRequest req = new ReservaRequest();
+        req.setHabitacionId(1L);
+        req.setHuespedId(1L);
+        req.setFechaEntrada(LocalDate.of(2026, 11, 20));
+        req.setFechaSalida(LocalDate.of(2026, 11, 23));
+        req.setNumHuespedes(1);
+
+        Reserva saved = new Reserva(1L, h, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 1, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+        ReservaResponse resp = new ReservaResponse(1L, 1L, 1L, "101", "Juan Perez", "12345678", LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 3, 1, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, java.util.Map.of());
+
+        when(clock.instant()).thenReturn(Instant.now());
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        when(reservaDao.findById(1L)).thenReturn(Optional.of(reservaExistente));
+        when(habitacionDao.findById(1L)).thenReturn(Optional.of(h));
+        when(huespedDao.findById(1L)).thenReturn(Optional.of(hu));
+        when(reservaDao.existsOverlapExcluding(1L, 1L, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23))).thenReturn(false);
+        when(cotizacionService.calculate(1L, 3)).thenReturn(new co.edu.ut.hotel.service.dto.response.CotizacionResponse(3, new BigDecimal("240000.00"), BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("240000.00")));
+        when(reservaDao.save(reservaExistente)).thenReturn(saved);
+        when(reservaMapper.toResponse(saved)).thenReturn(resp);
+
+        ReservaResponse result = reservaService.update(1L, req);
+
+        assertNotNull(result);
+        assertEquals(Integer.valueOf(1), result.numHuespedes());
+    }
+
+    @Test
+    void updateExitoso_cambioFechasSinCruce() {
+        Habitacion h = new HabitacionSencilla(1L, "101", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
+        Huesped hu = new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null);
+        Reserva reservaExistente = new Reserva(1L, h, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+
+        ReservaRequest req = new ReservaRequest();
+        req.setHabitacionId(1L);
+        req.setHuespedId(1L);
+        req.setFechaEntrada(LocalDate.of(2026, 11, 25));
+        req.setFechaSalida(LocalDate.of(2026, 11, 28));
+        req.setNumHuespedes(2);
+
+        Reserva saved = new Reserva(1L, h, hu, LocalDate.of(2026, 11, 25), LocalDate.of(2026, 11, 28), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+        ReservaResponse resp = new ReservaResponse(1L, 1L, 1L, "101", "Juan Perez", "12345678", LocalDate.of(2026, 11, 25), LocalDate.of(2026, 11, 28), 3, 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, java.util.Map.of());
+
+        when(clock.instant()).thenReturn(Instant.now());
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        when(reservaDao.findById(1L)).thenReturn(Optional.of(reservaExistente));
+        when(habitacionDao.findById(1L)).thenReturn(Optional.of(h));
+        when(huespedDao.findById(1L)).thenReturn(Optional.of(hu));
+        when(reservaDao.existsOverlapExcluding(1L, 1L, LocalDate.of(2026, 11, 25), LocalDate.of(2026, 11, 28))).thenReturn(false);
+        when(cotizacionService.calculate(1L, 3)).thenReturn(new co.edu.ut.hotel.service.dto.response.CotizacionResponse(3, new BigDecimal("240000.00"), BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("240000.00")));
+        when(reservaDao.save(reservaExistente)).thenReturn(saved);
+        when(reservaMapper.toResponse(saved)).thenReturn(resp);
+
+        ReservaResponse result = reservaService.update(1L, req);
+
+        assertNotNull(result);
+        assertEquals(LocalDate.of(2026, 11, 25), result.fechaEntrada());
+        assertEquals(LocalDate.of(2026, 11, 28), result.fechaSalida());
+    }
+
+    @Test
+    void updateFallo_reservaNoEncontrada() {
+        ReservaRequest req = new ReservaRequest();
+        req.setHabitacionId(1L);
+        req.setHuespedId(1L);
+        req.setFechaEntrada(LocalDate.of(2026, 11, 20));
+        req.setFechaSalida(LocalDate.of(2026, 11, 23));
+        req.setNumHuespedes(2);
+
+        when(reservaDao.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNoEncontradoException.class, () -> reservaService.update(99L, req));
+    }
+
+    @Test
+    void updateFallo_reservaNoEsConfirmada() {
+        Habitacion h = new HabitacionSencilla(1L, "101", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
+        Reserva reservaExistente = new Reserva(1L, h, new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null), LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CANCELADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+
+        ReservaRequest req = new ReservaRequest();
+        req.setHabitacionId(1L);
+        req.setHuespedId(1L);
+        req.setFechaEntrada(LocalDate.of(2026, 11, 20));
+        req.setFechaSalida(LocalDate.of(2026, 11, 23));
+        req.setNumHuespedes(2);
+
+        when(reservaDao.findById(1L)).thenReturn(Optional.of(reservaExistente));
+
+        assertThrows(IllegalArgumentException.class, () -> reservaService.update(1L, req));
+    }
+
+    @Test
+    void updateFallo_habitacionNoEncontrada() {
+        Habitacion h = new HabitacionSencilla(1L, "101", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
+        Huesped hu = new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null);
+        Reserva reservaExistente = new Reserva(1L, h, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+
+        ReservaRequest req = new ReservaRequest();
+        req.setHabitacionId(99L);
+        req.setHuespedId(1L);
+        req.setFechaEntrada(LocalDate.of(2026, 11, 20));
+        req.setFechaSalida(LocalDate.of(2026, 11, 23));
+        req.setNumHuespedes(2);
+
+        when(clock.instant()).thenReturn(Instant.now());
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        when(reservaDao.findById(1L)).thenReturn(Optional.of(reservaExistente));
+        when(habitacionDao.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNoEncontradoException.class, () -> reservaService.update(1L, req));
+    }
+
+    @Test
+    void updateFallo_habitacionMantenimiento() {
+        Habitacion hActual = new HabitacionSencilla(1L, "101", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
+        Habitacion hNueva = new HabitacionSencilla(2L, "102", 2, new BigDecimal("80000"), EstadoHabitacion.MANTENIMIENTO);
+        Huesped hu = new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null);
+        Reserva reservaExistente = new Reserva(1L, hActual, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+
+        ReservaRequest req = new ReservaRequest();
+        req.setHabitacionId(2L);
+        req.setHuespedId(1L);
+        req.setFechaEntrada(LocalDate.of(2026, 11, 20));
+        req.setFechaSalida(LocalDate.of(2026, 11, 23));
+        req.setNumHuespedes(2);
+
+        when(clock.instant()).thenReturn(Instant.now());
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        when(reservaDao.findById(1L)).thenReturn(Optional.of(reservaExistente));
+        when(habitacionDao.findById(2L)).thenReturn(Optional.of(hNueva));
+
+        assertThrows(HabitacionNoDisponibleException.class, () -> reservaService.update(1L, req));
+    }
+
+    @Test
+    void updateFallo_huespedNoEncontrado() {
+        Habitacion h = new HabitacionSencilla(1L, "101", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
+        Reserva reservaExistente = new Reserva(1L, h, new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null), LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+
+        ReservaRequest req = new ReservaRequest();
+        req.setHabitacionId(1L);
+        req.setHuespedId(99L);
+        req.setFechaEntrada(LocalDate.of(2026, 11, 20));
+        req.setFechaSalida(LocalDate.of(2026, 11, 23));
+        req.setNumHuespedes(2);
+
+        when(clock.instant()).thenReturn(Instant.now());
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        when(reservaDao.findById(1L)).thenReturn(Optional.of(reservaExistente));
+        when(habitacionDao.findById(1L)).thenReturn(Optional.of(h));
+        when(huespedDao.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNoEncontradoException.class, () -> reservaService.update(1L, req));
+    }
+
+    @Test
+    void updateFallo_fechaEntradaPasada() {
+        Habitacion h = new HabitacionSencilla(1L, "101", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
+        Huesped hu = new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null);
+        Reserva reservaExistente = new Reserva(1L, h, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+
+        ReservaRequest req = new ReservaRequest();
+        req.setHabitacionId(1L);
+        req.setHuespedId(1L);
+        req.setFechaEntrada(LocalDate.of(2026, 11, 10));
+        req.setFechaSalida(LocalDate.of(2026, 11, 23));
+        req.setNumHuespedes(2);
+
+        when(clock.instant()).thenReturn(Instant.now());
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        when(reservaDao.findById(1L)).thenReturn(Optional.of(reservaExistente));
+        when(habitacionDao.findById(1L)).thenReturn(Optional.of(h));
+        when(huespedDao.findById(1L)).thenReturn(Optional.of(hu));
+
+        assertThrows(IllegalArgumentException.class, () -> reservaService.update(1L, req));
+    }
+
+    @Test
+    void updateFallo_fechaSalidaAntesDeEntrada() {
+        Habitacion h = new HabitacionSencilla(1L, "101", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
+        Huesped hu = new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null);
+        Reserva reservaExistente = new Reserva(1L, h, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+
+        ReservaRequest req = new ReservaRequest();
+        req.setHabitacionId(1L);
+        req.setHuespedId(1L);
+        req.setFechaEntrada(LocalDate.of(2026, 11, 25));
+        req.setFechaSalida(LocalDate.of(2026, 11, 23));
+        req.setNumHuespedes(2);
+
+        when(clock.instant()).thenReturn(Instant.now());
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        when(reservaDao.findById(1L)).thenReturn(Optional.of(reservaExistente));
+        when(habitacionDao.findById(1L)).thenReturn(Optional.of(h));
+        when(huespedDao.findById(1L)).thenReturn(Optional.of(hu));
+
+        assertThrows(IllegalArgumentException.class, () -> reservaService.update(1L, req));
+    }
+
+    @Test
+    void updateFallo_huespedesExcedenCapacidad() {
+        Habitacion h = new HabitacionSencilla(1L, "101", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
+        Huesped hu = new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null);
+        Reserva reservaExistente = new Reserva(1L, h, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+
+        ReservaRequest req = new ReservaRequest();
+        req.setHabitacionId(1L);
+        req.setHuespedId(1L);
+        req.setFechaEntrada(LocalDate.of(2026, 11, 20));
+        req.setFechaSalida(LocalDate.of(2026, 11, 23));
+        req.setNumHuespedes(10);
+
+        when(clock.instant()).thenReturn(Instant.now());
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        when(reservaDao.findById(1L)).thenReturn(Optional.of(reservaExistente));
+        when(habitacionDao.findById(1L)).thenReturn(Optional.of(h));
+        when(huespedDao.findById(1L)).thenReturn(Optional.of(hu));
+
+        assertThrows(IllegalArgumentException.class, () -> reservaService.update(1L, req));
+    }
+
+    @Test
+    void updateFallo_cruceFechas_nuevoDentroDeExistente() {
+        Habitacion h = new HabitacionSencilla(1L, "101", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
+        Habitacion h2 = new HabitacionSencilla(2L, "102", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
+        Huesped hu = new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null);
+        Reserva reservaExistente = new Reserva(1L, h, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+        Reserva otraReserva = new Reserva(2L, h2, hu, LocalDate.of(2026, 11, 21), LocalDate.of(2026, 11, 22), 1, EstadoReserva.CONFIRMADA, new BigDecimal("80000"), BigDecimal.ZERO, null, null, null, null);
+
+        ReservaRequest req = new ReservaRequest();
+        req.setHabitacionId(2L);
+        req.setHuespedId(1L);
+        req.setFechaEntrada(LocalDate.of(2026, 11, 21));
+        req.setFechaSalida(LocalDate.of(2026, 11, 22));
+        req.setNumHuespedes(1);
+
+        when(clock.instant()).thenReturn(Instant.now());
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        when(reservaDao.findById(1L)).thenReturn(Optional.of(reservaExistente));
+        when(habitacionDao.findById(2L)).thenReturn(Optional.of(h2));
+        when(huespedDao.findById(1L)).thenReturn(Optional.of(hu));
+        when(reservaDao.existsOverlapExcluding(2L, 1L, LocalDate.of(2026, 11, 21), LocalDate.of(2026, 11, 22))).thenReturn(true);
+
+        assertThrows(ReservaCruzadaException.class, () -> reservaService.update(1L, req));
+    }
+
+    @Test
+    void updateExitoso_cambioHabitacionSinCruce() {
+        Habitacion hActual = new HabitacionSencilla(1L, "101", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
+        Habitacion hNueva = new HabitacionSencilla(2L, "102", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
+        Huesped hu = new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null);
+        Reserva reservaExistente = new Reserva(1L, hActual, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+
+        ReservaRequest req = new ReservaRequest();
+        req.setHabitacionId(2L);
+        req.setHuespedId(1L);
+        req.setFechaEntrada(LocalDate.of(2026, 11, 20));
+        req.setFechaSalida(LocalDate.of(2026, 11, 23));
+        req.setNumHuespedes(2);
+
+        Reserva saved = new Reserva(1L, hNueva, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+        ReservaResponse resp = new ReservaResponse(1L, 2L, 1L, "102", "Juan Perez", "12345678", LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 3, 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, java.util.Map.of());
+
+        when(clock.instant()).thenReturn(Instant.now());
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        when(reservaDao.findById(1L)).thenReturn(Optional.of(reservaExistente));
+        when(habitacionDao.findById(2L)).thenReturn(Optional.of(hNueva));
+        when(huespedDao.findById(1L)).thenReturn(Optional.of(hu));
+        when(reservaDao.existsOverlapExcluding(2L, 1L, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23))).thenReturn(false);
+        when(cotizacionService.calculate(2L, 3)).thenReturn(new co.edu.ut.hotel.service.dto.response.CotizacionResponse(3, new BigDecimal("240000.00"), BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("240000.00")));
+        when(reservaDao.save(reservaExistente)).thenReturn(saved);
+        when(reservaMapper.toResponse(saved)).thenReturn(resp);
+
+        ReservaResponse result = reservaService.update(1L, req);
+
+        assertNotNull(result);
+        assertEquals(2L, result.habitacionId());
+        assertEquals("102", result.habitacionNumero());
+    }
 }
