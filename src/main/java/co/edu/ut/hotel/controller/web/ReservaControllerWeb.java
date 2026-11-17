@@ -166,6 +166,8 @@ public class ReservaControllerWeb {
             req.setNumHuespedes(existente.numHuespedes());
             model.addAttribute("reserva", req);
             model.addAttribute("id", id);
+            model.addAttribute("habitacionNumero", existente.habitacionNumero());
+            model.addAttribute("huespedNombreCompleto", existente.huespedNombreCompleto());
             model.addAttribute("habitaciones", disponibilidadService.findAllReservables());
             model.addAttribute("huespedes", huespedService.findAll());
             return "reserva/form";
