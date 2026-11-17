@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Error</title>
+</head>
+<body>
+<th:block th:replace="~{fragments/layout :: navbar}"></th:block>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center mt-5">
+            <h1 class="display-1 text-danger" th:text="${status}">500</h1>
+            <h2>Ocurrió un error</h2>
+            <p class="lead" th:text="${error}">Error inesperado</p>
+            <p class="text-muted small" th:text="'Ruta: ' + ${path}"></p>
+            <a class="btn btn-primary mt-3" th:href="@{/}"><i class="bi bi-house"></i> Volver al inicio</a>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

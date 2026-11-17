@@ -1,0 +1,36 @@
+spring:
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5434/hotel}
+    username: ${DB_USER:hotel}
+    password: ${DB_PASSWORD:hotel}
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    cache: false
+  main:
+    banner-mode: off
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+  mvc:
+    format:
+      date: iso
+server:
+  port: 8081
+  error:
+    whitelabel:
+      enabled: false
+    include-stacktrace: never
+    include-message: never
+hotel:
+  demo:
+    simular-fallo-habilitado: false

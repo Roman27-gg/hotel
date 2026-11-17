@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Nueva Reserva</title>
+</head>
+<body>
+<th:block th:replace="~{fragments/layout :: navbar}"></th:block>
+<div class="container">
+    <th:block th:replace="~{fragments/layout :: alerts(${mensaje}, ${error}, ${errorGlobal})}"></th:block>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2>Nueva Reserva</h2>
+            <form th:action="@{/reservas/guardar}" method="post" th:object="${reserva}" class="needs-validation" novalidate>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Habitacion <span class="text-danger">*</span></label>
+                        <select class="form-select" th:field="*{habitacionId}" required th:errorclass="is-invalid">
+                            <option value="">Seleccione</option>
+                            <option th:each="h : ${habitaciones}" th:value="${h.id}" th:text="${h.numero} + ' - ' + ${h.tipo} + ' (' + ${h.capacidad} + ' personas)'">Habitacion</option>
+                        </select>
+                        <div class="invalid-feedback" th:each="err : ${#fields.errors('habitacionId')}" th:text="${err}">Error</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Huesped <span class="text-danger">*</span></label>
+                        <select class="form-select" th:field="*{huespedId}" required th:errorclass="is-invalid">
+                            <option value="">Seleccione</option>
+                            <option th:each="h : ${huespedes}" th:value="${h.id}" th:text="${h.nombreCompleto} + ' (' + ${h.documento} + ')'">Huesped</option>
+                        </select>
+                        <div class="invalid-feedback" th:each="err : ${#fields.errors('huespedId')}" th:text="${err}">Error</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha Entrada <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" th:field="*{fechaEntrada}" required th:errorclass="is-invalid"/>
+                        <div class="invalid-feedback" th:each="err : ${#fields.errors('fechaEntrada')}" th:text="${err}">Error</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha Salida <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" th:field="*{fechaSalida}" required th:errorclass="is-invalid"/>
+                        <div class="invalid-feedback" th:each="err : ${#fields.errors('fechaSalida')}" th:text="${err}">Error</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Num. Huespedes <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" th:field="*{numHuespedes}" min="1" required th:errorclass="is-invalid"/>
+                        <div class="invalid-feedback" th:each="err : ${#fields.errors('numHuespedes')}" th:text="${err}">Error</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Simular fallo despues de guardar (solo perfil demo)</label>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" th:field="*{simularFallo}" value="true"/>
+                        </div>
+                        <div class="form-text">Solo tiene efecto si el perfil demo esta activo y hotel.demo.simular-fallo-habilitado=true.</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">Guardar Reserva</button>
+                    <a class="btn btn-secondary" th:href="@{/reservas}">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

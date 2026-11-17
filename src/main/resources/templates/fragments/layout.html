@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="head(title)">
+    <title th:text="${title}">Hotel Familiar</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { background: #f4f6f9; }
+        .navbar { background: #1f3a5f; }
+        .navbar-brand, .nav-link { color: #fff !important; }
+        .btn-primary { background: #1f3a5f; border-color: #1f3a5f; }
+        .btn-primary:hover { background: #2e5e8c; border-color: #2e5e8c; }
+    </style>
+</th:block>
+
+<th:block th:fragment="navbar">
+    <nav class="navbar navbar-expand-lg mb-4">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/}"><i class="bi bi-building me-2"></i>Hotel Familiar</a>
+            <div class="navbar-nav">
+                <a class="nav-link" th:href="@{/}"><i class="bi bi-speedometer2"></i> Tablero</a>
+                <a class="nav-link" th:href="@{/habitaciones}"><i class="bi bi-bed"></i> Habitaciones</a>
+                <a class="nav-link" th:href="@{/huespedes}"><i class="bi bi-people"></i> Huéspedes</a>
+                <a class="nav-link" th:href="@{/reservas}"><i class="bi bi-calendar-check"></i> Reservas</a>
+                <a class="nav-link" th:href="@{/disponibilidad}"><i class="bi bi-search"></i> Disponibilidad</a>
+            </div>
+        </div>
+    </nav>
+</th:block>
+
+<th:block th:fragment="alerts(mensaje, error, errorGlobal)">
+    <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+        [[${mensaje}]]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        [[${error}]]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorGlobal != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        [[${errorGlobal}]]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</th:block>
+</html>

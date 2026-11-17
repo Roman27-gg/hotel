@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Huespedes</title>
+</head>
+<body>
+<th:block th:replace="~{fragments/layout :: navbar}"></th:block>
+<div class="container">
+    <th:block th:replace="~{fragments/layout :: alerts(${mensaje}, ${error}, ${errorGlobal})}"></th:block>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2><i class="bi bi-people me-2"></i>Gestion de Huespedes</h2>
+        <a class="btn btn-primary" th:href="@{/huespedes/nuevo}"><i class="bi bi-plus-lg"></i> Nuevo Huesped</a>
+    </div>
+
+    <form th:action="@{/huespedes}" method="get" class="row g-2 mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Buscar por documento o nombre</label>
+            <input type="text" class="form-control" name="buscar" th:value="${buscar}" placeholder="Documento o nombre"/>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Buscar</button>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Documento</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Telefono</th>
+                        <th>Correo</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="h : ${huespedes}">
+                        <td th:text="${h.documento}">-</td>
+                        <td th:text="${h.nombre}">-</td>
+                        <td th:text="${h.apellido}">-</td>
+                        <td th:text="${h.telefono}">-</td>
+                        <td th:text="${h.email}">-</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Nuevo Huesped</title>
+</head>
+<body>
+<th:block th:replace="~{fragments/layout :: navbar}"></th:block>
+<div class="container">
+    <th:block th:replace="~{fragments/layout :: alerts(${mensaje}, ${error}, ${errorGlobal})}"></th:block>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2>Nuevo Huesped</h2>
+            <form th:action="@{/huespedes/guardar}" method="post" th:object="${huesped}" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label class="form-label">Documento <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" th:field="*{documento}" required maxlength="20" th:errorclass="is-invalid"/>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('documento')}" th:text="${err}">Error</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" th:field="*{nombre}" required th:errorclass="is-invalid"/>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('nombre')}" th:text="${err}">Error</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Apellido <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" th:field="*{apellido}" required th:errorclass="is-invalid"/>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('apellido')}" th:text="${err}">Error</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Telefono <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" th:field="*{telefono}" required th:errorclass="is-invalid"/>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('telefono')}" th:text="${err}">Error</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Correo electronico</label>
+                    <input type="email" class="form-control" th:field="*{email}" th:errorclass="is-invalid"/>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('email')}" th:text="${err}">Error</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <a class="btn btn-secondary" th:href="@{/huespedes}">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

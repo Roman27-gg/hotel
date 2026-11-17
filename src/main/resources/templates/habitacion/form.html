@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Nueva Habitacion</title>
+</head>
+<body>
+<th:block th:replace="~{fragments/layout :: navbar}"></th:block>
+<div class="container">
+    <th:block th:replace="~{fragments/layout :: alerts(${mensaje}, ${error}, ${errorGlobal})}"></th:block>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 th:text="${id != null ? 'Editar Habitacion' : 'Nueva Habitacion'}">Nueva Habitacion</h2>
+            <form th:action="@{/habitaciones/guardar}" method="post" th:object="${habitacion}" class="needs-validation" novalidate th:if="${id == null}">
+                <div class="mb-3">
+                    <label class="form-label">Numero <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" th:field="*{numero}" required th:errorclass="is-invalid"/>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('numero')}" th:text="${err}">Error</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tipo <span class="text-danger">*</span></label>
+                    <select class="form-select" th:field="*{tipo}" required th:errorclass="is-invalid">
+                        <option th:each="t : ${tipos}" th:value="${t}" th:text="${t}">Tipo</option>
+                    </select>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('tipo')}" th:text="${err}">Error</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Capacidad <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" th:field="*{capacidad}" min="1" max="6" required th:errorclass="is-invalid"/>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('capacidad')}" th:text="${err}">Error</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tarifa por noche <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" th:field="*{tarifaNoche}" step="0.01" min="0" required th:errorclass="is-invalid"/>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('tarifaNoche')}" th:text="${err}">Error</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Estado <span class="text-danger">*</span></label>
+                    <select class="form-select" th:field="*{estado}" required th:errorclass="is-invalid">
+                        <option th:each="e : ${estados}" th:value="${e}" th:text="${e}">Estado</option>
+                    </select>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('estado')}" th:text="${err}">Error</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <a class="btn btn-secondary" th:href="@{/habitaciones}">Cancelar</a>
+                </div>
+            </form>
+            <form th:action="@{/habitaciones/actualizar/{id}(id=${id})}" method="post" th:object="${habitacion}" class="needs-validation" novalidate th:unless="${id == null}">
+                <div class="mb-3">
+                    <label class="form-label">Numero <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" th:field="*{numero}" required th:errorclass="is-invalid"/>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('numero')}" th:text="${err}">Error</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tipo <span class="text-danger">*</span></label>
+                    <select class="form-select" th:field="*{tipo}" required th:errorclass="is-invalid">
+                        <option th:each="t : ${tipos}" th:value="${t}" th:text="${t}">Tipo</option>
+                    </select>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('tipo')}" th:text="${err}">Error</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Capacidad <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" th:field="*{capacidad}" min="1" max="6" required th:errorclass="is-invalid"/>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('capacidad')}" th:text="${err}">Error</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tarifa por noche <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" th:field="*{tarifaNoche}" step="0.01" min="0" required th:errorclass="is-invalid"/>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('tarifaNoche')}" th:text="${err}">Error</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Estado <span class="text-danger">*</span></label>
+                    <select class="form-select" th:field="*{estado}" required th:errorclass="is-invalid">
+                        <option th:each="e : ${estados}" th:value="${e}" th:text="${e}">Estado</option>
+                    </select>
+                    <div class="invalid-feedback" th:each="err : ${#fields.errors('estado')}" th:text="${err}">Error</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <a class="btn btn-secondary" th:href="@{/habitaciones}">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

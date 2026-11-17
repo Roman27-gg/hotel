@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Detalle Reserva</title>
+</head>
+<body>
+<th:block th:replace="~{fragments/layout :: navbar}"></th:block>
+<div class="container">
+    <th:block th:replace="~{fragments/layout :: alerts(${mensaje}, ${error}, ${errorGlobal})}"></th:block>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2>Detalle de Reserva</h2>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>ID:</strong> <span th:text="${reserva.id}">-</span></p>
+                            <p><strong>Habitacion:</strong> <span th:text="${reserva.habitacionNumero}">-</span></p>
+                            <p><strong>Huesped:</strong> <span th:text="${reserva.huespedNombreCompleto}">-</span></p>
+                            <p><strong>Entrada:</strong> <span th:text="${reserva.fechaEntrada}">-</span></p>
+                            <p><strong>Salida:</strong> <span th:text="${reserva.fechaSalida}">-</span></p>
+                            <p><strong>Noches:</strong> <span th:text="${reserva.noches}">-</span></p>
+                            <p><strong>Huespedes:</strong> <span th:text="${reserva.numHuespedes}">-</span></p>
+                        </div>
+                        <div class="col-md-6">
+<p><strong>Estado:</strong>
+    <th:block th:switch="${reserva.estado}">
+        <span class="badge bg-primary" th:case="'CONFIRMADA'" th:text="${reserva.estado}">-</span>
+        <span class="badge bg-danger" th:case="'CANCELADA'" th:text="${reserva.estado}">-</span>
+        <span class="badge bg-success" th:case="'FINALIZADA'" th:text="${reserva.estado}">-</span>
+        <span class="badge bg-secondary" th:case="*" th:text="${reserva.estado}">-</span>
+    </th:block>
+</p>
+                            <p><strong>Valor Total:</strong> <span th:text="${#numbers.formatDecimal(reserva.valorTotal, 0, 'COMMA', 2, 'POINT')}">-</span></p>
+                            <p><strong>Penalizacion:</strong> <span th:text="${#numbers.formatDecimal(reserva.penalizacion, 0, 'COMMA', 2, 'POINT')}">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><strong>Desglose del valor</strong></div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                        <tr><th>Concepto</th><th class="text-end">Monto</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="entry : ${reserva.desglose}">
+                            <td th:text="${entry.key}">-</td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(entry.value, 0, 'COMMA', 2, 'POINT')}">-</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a class="btn btn-secondary" th:href="@{/reservas}">Volver</a>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
