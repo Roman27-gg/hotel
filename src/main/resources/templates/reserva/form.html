@@ -59,6 +59,8 @@
             </form>
             <!-- Formulario para EDITAR reserva (solo fechas y numHuespedes) -->
             <form th:action="@{/reservas/actualizar/{id}(id=${id})}" method="post" th:object="${reserva}" class="needs-validation" novalidate th:unless="${id == null}">
+                <input type="hidden" th:field="*{habitacionId}"/>
+                <input type="hidden" th:field="*{huespedId}"/>
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Habitacion</label>
