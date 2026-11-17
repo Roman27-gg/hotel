@@ -154,16 +154,13 @@ public class ReservaControllerWeb {
     public String editarForm(@PathVariable Long id, Model model, RedirectAttributes redirect) {
         try {
             ReservaResponse existente = servicio.findById(id);
-            if (existente.estado() != EstadoReserva.CONFIRMADA) {
-                redirect.addFlashAttribute("error", "Solo se puede editar una reserva CONFIRMADA");
-                return "redirect:/reservas";
-            }
             ReservaRequest req = new ReservaRequest();
             req.setHabitacionId(existente.habitacionId());
             req.setHuespedId(existente.huespedId());
             req.setFechaEntrada(existente.fechaEntrada());
             req.setFechaSalida(existente.fechaSalida());
             req.setNumHuespedes(existente.numHuespedes());
+            req.setEstado(existente.estado());
             model.addAttribute("reserva", req);
             model.addAttribute("id", id);
             model.addAttribute("habitacionNumero", existente.habitacionNumero());

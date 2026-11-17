@@ -310,9 +310,10 @@ class ReservaServiceImplTest {
     }
 
     @Test
-    void updateFallo_reservaNoEsConfirmada() {
+    void updateExitoso_cambiarEstadoACancelada() {
         Habitacion h = new HabitacionSencilla(1L, "101", 2, new BigDecimal("80000"), EstadoHabitacion.DISPONIBLE);
-        Reserva reservaExistente = new Reserva(1L, h, new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null), LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CANCELADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+        Huesped hu = new Huesped(1L, "12345678", "Juan", "Perez", "3001112233", "juan@email.com", null);
+        Reserva reservaExistente = new Reserva(1L, h, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CONFIRMADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
 
         ReservaRequest req = new ReservaRequest();
         req.setHabitacionId(1L);
@@ -320,10 +321,23 @@ class ReservaServiceImplTest {
         req.setFechaEntrada(LocalDate.of(2026, 11, 20));
         req.setFechaSalida(LocalDate.of(2026, 11, 23));
         req.setNumHuespedes(2);
+        req.setEstado(EstadoReserva.CANCELADA);
 
+        Reserva saved = new Reserva(1L, h, hu, LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 2, EstadoReserva.CANCELADA, new BigDecimal("240000"), BigDecimal.ZERO, null, null, null, null);
+        ReservaResponse resp = new ReservaResponse(1L, 1L, 1L, "101", "Juan Perez", "12345678", LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 3, 2, EstadoReserva.CANCELADA, new BigDecimal("240000"), BigDecimal.ZERO, java.util.Map.of());
+
+        when(clock.instant()).thenReturn(Instant.now());
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
         when(reservaDao.findById(1L)).thenReturn(Optional.of(reservaExistente));
+        when(habitacionDao.findById(1L)).thenReturn(Optional.of(h));
+        when(huespedDao.findById(1L)).thenReturn(Optional.of(hu));
+        when(reservaDao.save(reservaExistente)).thenReturn(saved);
+        when(reservaMapper.toResponse(saved)).thenReturn(resp);
 
-        assertThrows(IllegalArgumentException.class, () -> reservaService.update(1L, req));
+        ReservaResponse result = reservaService.update(1L, req);
+
+        assertNotNull(result);
+        assertEquals(EstadoReserva.CANCELADA, result.estado());
     }
 
     @Test

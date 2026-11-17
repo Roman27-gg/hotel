@@ -1,5 +1,6 @@
 package co.edu.ut.hotel.service.dto.request;
 
+import co.edu.ut.hotel.service.enums.EstadoReserva;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.FutureOrPresent;
@@ -47,6 +48,8 @@ public class ReservaRequest {
 
     @DecimalMin(value = "0.0", message = "El valor total no puede ser negativo")
     private BigDecimal valorTotal;
+
+    private EstadoReserva estado;
 
     /**
      * Valida que la fecha de salida sea posterior a la de entrada.

@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -162,9 +163,8 @@ public class ReservaServiceImpl implements ReservaService {
         Reserva reserva = reservaDao.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Reserva no encontrada con id " + id));
 
-        if (reserva.getEstado() != EstadoReserva.CONFIRMADA) {
-            throw new IllegalArgumentException("Solo se puede editar una reserva CONFIRMADA");
-        }
+        EstadoReserva estadoAnterior = reserva.getEstado();
+        EstadoReserva estadoNuevo = request.getEstado() != null ? request.getEstado() : estadoAnterior;
 
         // Obtener la habitación actual y la nueva (si cambió)
         Habitacion habitacionActual = reserva.getHabitacion();
@@ -178,6 +178,18 @@ public class ReservaServiceImpl implements ReservaService {
         Huesped huesped = huespedDao.findById(request.getHuespedId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Huesped no encontrado con id " + request.getHuespedId()));
 
+        // Si el estado cambia a CANCELADA, no validar fechas ni cruce
+        if (EstadoReserva.CANCELADA.equals(estadoNuevo) && !EstadoReserva.CANCELADA.equals(estadoAnterior)) {
+            reserva.setEstado(EstadoReserva.CANCELADA);
+            reserva.setFechaCancelacion(LocalDateTime.now(clock));
+            reserva.setHuesped(huesped);
+            Reserva saved = reservaDao.save(reserva);
+            recalcularEstadoHabitacion(habitacionActual.getId());
+            log.info("Reserva cancelada: id={} habitacion={}", saved.getId(), habitacionActual.getNumero());
+            return reservaMapper.toResponse(saved);
+        }
+
+        // Validar fechas y cruce solo para reservas CONFIRMADA o FINALIZADA
         LocalDate hoy = LocalDate.now(clock);
         if (request.getFechaEntrada().isBefore(hoy)) {
             throw new IllegalArgumentException("La fecha de entrada no puede ser anterior a hoy (" + hoy + ")");
@@ -201,6 +213,7 @@ public class ReservaServiceImpl implements ReservaService {
         reserva.setFechaEntrada(request.getFechaEntrada());
         reserva.setFechaSalida(request.getFechaSalida());
         reserva.setNumHuespedes(request.getNumHuespedes());
+        reserva.setEstado(estadoNuevo);
         reserva.setValorTotal(valorTotal);
 
         Reserva saved = reservaDao.save(reserva);
@@ -211,7 +224,7 @@ public class ReservaServiceImpl implements ReservaService {
             recalcularEstadoHabitacion(habitacionNueva.getId());
         }
 
-        log.info("Reserva actualizada: id={} habitacion={} valorTotal={}", saved.getId(), habitacionNueva.getNumero(), valorTotal);
+        log.info("Reserva actualizada: id={} habitacion={} estado={} valorTotal={}", saved.getId(), habitacionNueva.getNumero(), estadoNuevo, valorTotal);
         return reservaMapper.toResponse(saved);
     }
 

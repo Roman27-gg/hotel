@@ -170,6 +170,7 @@ class ReservaControllerWebViewTest {
         MvcResult result = mockMvc.perform(post("/reservas/guardar")
                         .param("habitacionId", "1")
                         .param("huespedId", "1")
+                        .param("estado", "CONFIRMADA")
                         .param("fechaEntrada", "2026-12-20")
                         .param("fechaSalida", "2026-12-25")
                         .param("numHuespedes", "2"))
@@ -219,16 +220,23 @@ class ReservaControllerWebViewTest {
         if (inputFechaSalida == null || !"2026-11-23".equals(inputFechaSalida.attr("value"))) {
             throw new AssertionError("Editar: fechaSalida no se conserva");
         }
+        var selectEstado = doc.select("select[name=estado]").first();
+        if (selectEstado == null) {
+            throw new AssertionError("Editar: select de estado no encontrado");
+        }
+        var opcionSeleccionada = selectEstado.select("option[selected]").first();
+        if (opcionSeleccionada == null || !"CONFIRMADA".equals(opcionSeleccionada.attr("value"))) {
+            throw new AssertionError("Editar: estado CONFIRMADA no está seleccionado");
+        }
     }
 
     @Test
-    void editarForm_reservaNoEsConfirmada_redirige() throws Exception {
-        ReservaResponse r = new ReservaResponse(1L, 1L, 1L, "101", "Juan Perez", "12345678",
-                LocalDate.of(2026, 11, 20), LocalDate.of(2026, 11, 23), 3, 2, EstadoReserva.CANCELADA,
-                BigDecimal.valueOf(240000), BigDecimal.ZERO, java.util.Map.of());
-        when(reservaService.findById(1L)).thenReturn(r);
+    void editarForm_reservaNoEncontrada_redirige() throws Exception {
+        when(reservaService.findById(99L)).thenThrow(
+                new co.edu.ut.hotel.service.exception.RecursoNoEncontradoException("Reserva no encontrada con id 99")
+        );
 
-        MvcResult result = mockMvc.perform(get("/reservas/editar/1"))
+        MvcResult result = mockMvc.perform(get("/reservas/editar/99"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/reservas"))
                 .andExpect(flash().attributeExists("error"))
@@ -248,6 +256,7 @@ class ReservaControllerWebViewTest {
         MvcResult result = mockMvc.perform(post("/reservas/actualizar/1")
                         .param("habitacionId", "1")
                         .param("huespedId", "1")
+                        .param("estado", "CONFIRMADA")
                         .param("fechaEntrada", "2026-12-20")
                         .param("fechaSalida", "2026-12-25")
                         .param("numHuespedes", "2"))
@@ -269,6 +278,7 @@ class ReservaControllerWebViewTest {
         MvcResult result = mockMvc.perform(post("/reservas/actualizar/1")
                         .param("habitacionId", "1")
                         .param("huespedId", "1")
+                        .param("estado", "CONFIRMADA")
                         .param("fechaEntrada", "2026-12-25")
                         .param("fechaSalida", "2026-12-20")
                         .param("numHuespedes", "2"))
@@ -295,6 +305,7 @@ class ReservaControllerWebViewTest {
         MvcResult result = mockMvc.perform(post("/reservas/actualizar/1")
                         .param("habitacionId", "1")
                         .param("huespedId", "1")
+                        .param("estado", "CONFIRMADA")
                         .param("fechaEntrada", "2026-12-20")
                         .param("fechaSalida", "2026-12-25")
                         .param("numHuespedes", "2"))
